@@ -164,7 +164,8 @@
                                                 <li class="divider"></li>
                                                 <li><a href="#" id="resize-nodes-to-content">Resize Nodes To Content</a></li>
                                                 <li><a href="#" id="highlight-errors-of-validation"> Validate Map...</a></li>
-                                                
+                                                <li><a href="#" id="highlight-errors-of-pd2af"> Convert PD map to AF map</a></li>
+
                                                 <li class="divider"></li>
                                                 <li class="disabled"><a href="#" id="undo-last-action" >Undo</a></li>
                                                 <li class="disabled"><a href="#" id="redo-last-action" >Redo</a></li>
@@ -859,7 +860,13 @@
         <div id="prompt-invalidEdge-table" tabindex="-1" class="modal fade" role="dialog">
             <!-- map type change confirmation dialog will be shown here-->
         </div>
-
+        <div id="prompt-errorInvalidType-table" tabindex="-1" class="modal fade" role="dialog">
+            <!-- map type change confirmation dialog will be shown here-->
+        </div>
+        <div id="prompt-errorPD2AF-table" tabindex="-1" class="modal fade" role="dialog">
+            <!-- map type change confirmation dialog will be shown here-->
+        </div>
+        
         <div id="sbgn-bricks-table" tabindex="-1" class="modal fade" role="dialog">
             <!-- reaction templatequery table will be shown here -->
         </div>
@@ -2276,6 +2283,67 @@
                         <button id="prompt-fileConversionError-confirm" class="btn btn-default">OK</button>
                     </div>
                 </div>
+            </div>
+        </script>
+        
+        <!-- Invalid Map Type Warning-->
+        <script type="text/template" id="prompt-errorInvalidType-template">
+            <div class="modal-dialog sbgn-modal-dialog" style="width: 335px;">
+            <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Error</h4>
+            </div>
+            <div class="modal-body">
+            <table class="table-condensed layout-table dialog-table" style="margin: auto;">
+            <tbody>
+            <tr>
+            <th style="padding-left: 0px;" align="left">
+            <span class="add-on layout-text centered">Invalid map type!</span>
+            </th>
+            </tr>
+
+            <tr id="prompt-errorInvalidType-buttons" style="padding-bottom: 0px; margin-bottom: 0px;">
+            <td>
+            </td>
+            </tr>
+            </tbody>
+            </table>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+            <button id="prompt-errorInvalidType-confirm" class="btn btn-default">OK</button>
+            </div>
+            </div>
+            </div>
+        </script>
+        <!-- Error on PD2AF Conversion -->
+        <script type="text/template" id="prompt-errorPD2AF-template">
+            <div class="modal-dialog sbgn-modal-dialog" style="width: 335px;">
+            <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Error</h4>
+            </div>
+            <div class="modal-body">
+            <table class="table-condensed layout-table dialog-table" style="margin: auto;">
+            <tbody>
+            <tr>
+            <th style="padding-left: 0px;" align="left">
+            <span class="add-on layout-text centered"><%= message %></span>
+            </th>
+            </tr>
+
+            <tr id="prompt-errorPD2AF-buttons" style="padding-bottom: 0px; margin-bottom: 0px;">
+            <td>
+            </td>
+            </tr>
+            </tbody>
+            </table>
+            </div>
+            <div class="modal-footer" style="text-align: center">
+            <button id="prompt-errorPD2AF-confirm" class="btn btn-default">OK</button>
+            </div>
+            </div>
             </div>
         </script>
 

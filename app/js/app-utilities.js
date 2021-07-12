@@ -339,16 +339,19 @@ appUtilities.adjustVisibilityOfNetworkTabs = function () {
 };
 
 // creates a new network and returns the new chise.js instance that is created for this network
-appUtilities.createNewNetwork = function () {
+appUtilities.createNewNetwork = function (networkName, networkDescription) {
 
   // id of the div panel associated with the new network
   var networkPanelId = appUtilities.getNetworkPanelId(appUtilities.nextNetworkId);
 
   // id of the tab for the new network
   var networkTabId = appUtilities.getNetworkTabId(appUtilities.nextNetworkId);
-
-  // use the default map name for the given next network id
-  var mapName = appUtilities.getDefaultMapName(appUtilities.nextNetworkId);
+  
+  var mapName;
+  if(networkName)
+    mapName = networkName;
+  else
+    mapName = appUtilities.getDefaultMapName(appUtilities.nextNetworkId);
 
   // create physical html components for the new network
   // use map name as the tab description
@@ -364,7 +367,8 @@ appUtilities.createNewNetwork = function () {
   
   // update the map name with the default map name specific for network id
   currentGeneralProperties.mapName = mapName;
-
+  if(networkDescription)
+    currentGeneralProperties.mapDescription = networkDescription;
   // Create a new chise.js instance
   var newInst = chise({
     networkContainerSelector: networkPanelSelector,
@@ -427,7 +431,7 @@ appUtilities.createNewNetwork = function () {
   appUtilities.setScratch(newInst.getCy(), 'currentLayoutProperties', currentLayoutProperties);
   appUtilities.setScratch(newInst.getCy(), 'currentGridProperties', currentGridProperties);
   appUtilities.setScratch(newInst.getCy(), 'currentGeneralProperties', currentGeneralProperties);
-  
+
   // init the current file name for the map
   appUtilities.setScratch(newInst.getCy(), 'currentFileName', 'new_file.nwt');
 
@@ -464,7 +468,6 @@ appUtilities.createNewNetwork = function () {
 
   // adjust the visibility of network tabs
   appUtilities.adjustVisibilityOfNetworkTabs();
-
   // return the new instance
   return newInst;
 };

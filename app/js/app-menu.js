@@ -13,7 +13,7 @@ module.exports = function() {
   var dynamicResize = appUtilities.dynamicResize.bind(appUtilities);
 
   var layoutPropertiesView, generalPropertiesView,neighborhoodQueryView, pathsBetweenQueryView, pathsFromToQueryView, commonStreamQueryView, pathsByURIQueryView,  promptSaveView, promptConfirmationView,
-        promptMapTypeView, promptInvalidFileView, promptFileConversionErrorView, promptInvalidURIWarning, reactionTemplateView, gridPropertiesView, fontPropertiesView, fileSaveView,saveUserPreferencesView, loadUserPreferencesView;
+        promptMapTypeView, promptInvalidTypeWarning, promtErrorPD2AF, promptInvalidFileView, promptFileConversionErrorView, promptInvalidURIWarning, reactionTemplateView, gridPropertiesView, fontPropertiesView, fileSaveView,saveUserPreferencesView, loadUserPreferencesView;
 
   function validateSBGNML(xml) {
     $.ajax({
@@ -128,6 +128,8 @@ module.exports = function() {
   promptConfirmationView = appUtilities.promptConfirmationView = new BackboneViews.PromptConfirmationView({el: '#prompt-confirmation-table'});
   promptMapTypeView = appUtilities.promptMapTypeView = new BackboneViews.PromptMapTypeView({el: '#prompt-mapType-table'});
   promptInvalidFileView = appUtilities.promptInvalidFileView = new BackboneViews.PromptInvalidFileView({el: '#prompt-invalidFile-table'});
+  promptInvalidTypeWarning = appUtilities.promptInvalidTypeWarning = new BackboneViews.PromptInvalidTypeWarning({el: '#prompt-errorInvalidType-table'});
+  promtErrorPD2AF = appUtilities.promtErrorPD2AF = new BackboneViews.PromtErrorPD2AF({el: '#prompt-errorPD2AF-table'});
   promptFileConversionErrorView = appUtilities.promptFileConversionErrorView = new BackboneViews.PromptFileConversionErrorView({el: '#prompt-fileConversionError-table'});
   reactionTemplateView = appUtilities.reactionTemplateView = new BackboneViews.ReactionTemplateView({el: '#sbgn-bricks-table'});
   gridPropertiesView = appUtilities.gridPropertiesView = new BackboneViews.GridPropertiesView({el: '#grid-properties-table'});
@@ -602,12 +604,14 @@ module.exports = function() {
 
       // unlock graph topolpgy in case it is locked
       chiseInstance.elementUtilities.unlockGraphTopology();
-
       // reset map name and description
       // default map name should be a string that contains the network id
-      currentGeneralProperties.mapName = appUtilities.getDefaultMapName(networkId);
-      currentGeneralProperties.mapDescription = appUtilities.defaultGeneralProperties.mapDescription;
-    
+      if(!currentGeneralProperties.mapPD2AFConverted) {// if the file don't have a specified map name from pd map to af map conversion
+        currentGeneralProperties.mapName = appUtilities.getDefaultMapName(networkId);
+        currentGeneralProperties.mapDescription = appUtilities.defaultGeneralProperties.mapDescription;
+      }
+      currentGeneralProperties.mapPD2AFConverted = false; // Map name loaded, when new map is loading to the canvas name should be change
+
       // set recalculate layout on complexity management based on map size
       if (cy.nodes().length > 1250){
         currentGeneralProperties.recalculateLayoutOnComplexityManagement = false;
@@ -966,7 +970,107 @@ module.exports = function() {
       chiseInstance.highlightProcesses(cy.nodes(':selected'));
     });
 
+    // PD map to AF map conversion 
+    $("#highlight-errors-of-pd2af").click(function (e) {
+    
+      var chiseInstance = appUtilities.getActiveChiseInstance();
+      var chiseSpinnerInstance = appUtilities.getActiveChiseInstance();
+      var filename = document.getElementById('file-name').innerHTML;
+      var fExt = 'sbgn';
+      filename = filename.substring(0, filename.lastIndexOf('.')).concat(".").concat(fExt);
 
+      // Get the map from the canvas
+      
+      var cy = chiseInstance.getCy();
+      var nodes = cy.nodes().filter( function( node ) {
+        return node.visible();
+      } );
+      
+      var edges = cy.edges().filter( function( edge ) {
+        return edge.visible();
+      } );
+      
+      var renderInfo = appUtilities.getAllStyles(cy, nodes, edges);
+
+      var properties = appUtilities.getScratch(appUtilities.getActiveCy(), 'currentGeneralProperties');
+
+      // var dene = file.createSbgnml(filename, "plain", renderInfo, properties, nodes, edges);
+      var file = chiseInstance.getSbgnvizInstance().convertSbgn(filename, "plain", renderInfo, properties, nodes, edges);
+
+      // If the map type is not PD or canvas is empty display error  
+      if(chiseInstance.getMapType() != 'PD'){
+        promptInvalidTypeWarning.render();
+        return;
+      }
+
+      if(nodes.length == 0 || edges.length == 0){
+        promtErrorPD2AF.render("No visible map found!");
+        return;
+      }
+
+      chiseSpinnerInstance.startSpinner("layout-spinner");
+
+      // pd2af returns filename and file url
+      $.ajax({
+        // After deploying Bridge Server (pd2af-webservice) write the bridge server's URL but leave the /convert
+        // url: "https://pd2afwebservice.herokuapp.com/convert",
+        url: "http://139.179.21.94:4000/convert", //public server url
+        type: "POST",
+        ContentType: 'multipart/form-data; boundary=----WebKitFormBoundaryQzlzmdgbQfbawnvk',
+        data: {
+          'file': file,
+          'filename': filename
+        },
+        success: function (data) {
+          // If response returns error display the message
+          if(data.name==='Error' || data.error || data.name==='error'){
+            console.log(data);
+            chiseSpinnerInstance.endSpinner("layout-spinner");
+            promtErrorPD2AF.render(data.message);
+          }else{
+            chiseSpinnerInstance.endSpinner("layout-spinner");
+            filename = data.filename;
+
+            // Create new network 
+            var current = appUtilities.getScratch(appUtilities.getActiveCy(), 'currentGeneralProperties');
+            var networkName = current.mapName;
+            var networkDescription = current.mapDescription;
+            // If networkDescription itself is used to create the description text, original map description would also be changed
+            if(networkDescription ){
+              var st = JSON.stringify(networkDescription[0]);
+              st = st.slice(1); // For removing " at the beginning
+              st = "AF map of " + st.charAt(0).toLowerCase() + st.slice(1);
+              st = st.slice(0,-1); // For removing " at the end
+            }
+            networkName += " AF";
+            var newNetwork = appUtilities.createNewNetwork(networkName, st); // Create new network (new Newt tab)
+            var currentGeneralProperties = appUtilities.getScratch(appUtilities.getActiveCy(), 'currentGeneralProperties');
+            currentGeneralProperties.mapPD2AFConverted = true; // Set it to true so load will not overwrite the map name and description
+            currentGeneralProperties.inferNestingOnLoad = true;
+            appUtilities.setScratch(appUtilities.getActiveCy(), 'currentGeneralProperties', currentGeneralProperties);
+
+            chiseInstance = appUtilities.getActiveChiseInstance();
+            var fileExtension = filename.split('.');
+            var fileToLoad = new File([data.body], filename, {
+                      type: 'text/sbgn',
+                      lastModified: Date.now()
+                    });
+            chiseInstance.loadNwtFile(fileToLoad, ()=>{}, ()=>{}, data);
+            // cyInstance.fit( cyInstance.elements(":visible"), 20 );
+          }
+        },
+        error: function (data) {
+          console.log(data);
+          chiseSpinnerInstance.endSpinner("layout-spinner");
+          if(data.status == 0)
+            promtErrorPD2AF.render("Server might be offline!");
+          
+          else
+            promtErrorPD2AF.render(data.message);
+        }
+      });
+    });
+  
   $("#highlight-errors-of-validation, #highlight-errors-of-validation-icon").click(function (e) {
    modeHandler.enableReadMode();
     // use active chise instance

@@ -3303,7 +3303,47 @@ var PromptInvalidFileView = Backbone.View.extend({
     return this;
   }
 });
+var PromptInvalidTypeWarning = Backbone.View.extend({
+  initialize: function () {
+    var self = this;
+    self.template = _.template($("#prompt-errorInvalidType-template").html());
+  },
+  render: function () {
+    var self = this;
+    self.template = _.template($("#prompt-errorInvalidType-template").html());
 
+    $(self.el).html(self.template);
+    $(self.el).modal('show');
+
+    $(document).off("click", "#prompt-errorInvalidType-confirm").on("click", "#prompt-errorInvalidType-confirm", function (evt) {
+      $(self.el).modal('toggle');
+    });
+
+    return this;
+  }
+});
+var PromtErrorPD2AF = Backbone.View.extend({
+  initialize: function () {
+    var self = this;
+    self.template = _.template($("#prompt-errorPD2AF-template").html());
+  },
+  render: function (message) {
+    var self = this;
+    self.template = _.template($("#prompt-errorPD2AF-template").html());
+
+    var param = {};
+    param.message = message;
+    self.template = self.template(param);
+
+    $(self.el).html(self.template);
+    $(self.el).modal('show');
+
+    $(document).off("click", "#prompt-errorPD2AF-confirm").on("click", "#prompt-errorPD2AF-confirm", function (evt) {
+      $(self.el).modal('toggle');
+    });
+    return this;
+  }
+});
 var PromptFileConversionErrorView = Backbone.View.extend({
    initialize: function () {
      var self = this;
@@ -5241,6 +5281,8 @@ module.exports = {
   PromptConfirmationView: PromptConfirmationView,
   PromptMapTypeView: PromptMapTypeView,
   PromptInvalidFileView: PromptInvalidFileView,
+  PromptInvalidTypeWarning: PromptInvalidTypeWarning,
+  PromtErrorPD2AF: PromtErrorPD2AF,
   PromptFileConversionErrorView: PromptFileConversionErrorView,
   ReactionTemplateView: ReactionTemplateView,
   GridPropertiesView: GridPropertiesView,

@@ -143,6 +143,14 @@ module.exports = function (chiseInstance) {
         coreAsWell: true // Whether core instance have this item on cxttap
       },
       {
+        id: 'ctx-menu-pd2af',
+        content: 'Convert PD map to AF map',
+        onClickFunction: function () {
+          $('#highlight-errors-of-pd2af').trigger('click');
+        },
+        coreAsWell: true // Whether core instance have this item on cxttap
+      },
+      {
         id: 'ctx-menu-collapse-complexes',
         content: 'Collapse Complexes',
         onClickFunction: function () {
